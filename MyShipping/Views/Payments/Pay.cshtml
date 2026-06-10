@@ -1,0 +1,133 @@
+@model MyShipping.Models.ViewModels.PaymentViewModel
+@{
+    ViewData["Title"] = "Complete Payment";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <h2 class="fw-bold mb-4"><i class="bi bi-credit-card me-2 text-primary"></i>Complete Payment</h2>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Tracking Number</span>
+                    <span class="font-monospace fw-semibold">@Model.TrackingNumber</span>
+                </div>
+                <hr class="my-2" />
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Total Due</span>
+                    <span class="fs-4 fw-bold text-primary">$@Model.Amount.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="Pay" method="post" id="paymentForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ShipmentId" />
+                    <input type="hidden" asp-for="Amount" />
+                    <input type="hidden" asp-for="TrackingNumber" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <!-- Gateway selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Payment Method</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="Gateway"
+                                       value="CreditCard" id="gwCard" checked onchange="toggleGatewayFields()" />
+                                <label class="form-check-label" for="gwCard">
+                                    <i class="bi bi-credit-card me-1"></i>Credit Card
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="Gateway"
+                                       value="PayPal" id="gwPaypal" onchange="toggleGatewayFields()" />
+                                <label class="form-check-label" for="gwPaypal">
+                                    <i class="bi bi-paypal me-1"></i>PayPal
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" asp-for="Gateway"
+                                       value="BankTransfer" id="gwBank" onchange="toggleGatewayFields()" />
+                                <label class="form-check-label" for="gwBank">
+                                    <i class="bi bi-bank me-1"></i>Bank Transfer
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Credit card fields -->
+                    <div id="cardFields">
+                        <div class="mb-3">
+                            <label asp-for="CardholderName" class="form-label"></label>
+                            <input asp-for="CardholderName" class="form-control" placeholder="Jane Doe" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="CardNumber" class="form-label"></label>
+                            <input asp-for="CardNumber" class="form-control font-monospace"
+                                   placeholder="1234 5678 9012 3456" maxlength="19" id="cardNumberInput" />
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label asp-for="ExpiryDate" class="form-label"></label>
+                                <input asp-for="ExpiryDate" class="form-control" placeholder="MM/YY" maxlength="5" />
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Cvv" class="form-label"></label>
+                                <input asp-for="Cvv" class="form-control" placeholder="123" maxlength="4" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PayPal / Bank info -->
+                    <div id="altFields" class="d-none">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            You will be redirected to complete your payment after clicking "Pay Now".
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-success btn-lg" id="payBtn">
+                            <i class="bi bi-lock-fill me-2"></i>Pay $@Model.Amount.ToString("N2") Securely
+                        </button>
+                    </div>
+                    <p class="text-muted text-center small mt-2">
+                        <i class="bi bi-shield-check me-1"></i>Your payment is encrypted and secure.
+                    </p>
+                </form>
+            </div>
+        </div>
+        <div class="mt-3 text-center">
+            <a asp-controller="Shipments" asp-action="Details" asp-route-id="@Model.ShipmentId"
+               class="text-muted small">← Back to shipment</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function toggleGatewayFields() {
+            const isCard = document.getElementById("gwCard").checked;
+            document.getElementById("cardFields").classList.toggle("d-none", !isCard);
+            document.getElementById("altFields").classList.toggle("d-none", isCard);
+        }
+
+        // Format card number with spaces
+        document.getElementById("cardNumberInput")?.addEventListener("input", function (e) {
+            let v = e.target.value.replace(/\D/g, "").substring(0, 16);
+            e.target.value = v.replace(/(.{4})/g, "$1 ").trim();
+        });
+
+        // Prevent double submission
+        document.getElementById("paymentForm").addEventListener("submit", function () {
+            const btn = document.getElementById("payBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing…';
+        });
+    </script>
+}

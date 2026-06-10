@@ -1,0 +1,97 @@
+@model MyShipping.Models.ViewModels.CreateShipmentViewModel
+@{
+    ViewData["Title"] = "New Shipment";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h2 class="fw-bold mb-4"><i class="bi bi-plus-circle me-2 text-primary"></i>New Shipment</h2>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-person-lines-fill me-2"></i>Sender</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="SenderName" class="form-label"></label>
+                            <input asp-for="SenderName" class="form-control" />
+                            <span asp-validation-for="SenderName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SenderAddress" class="form-label"></label>
+                            <input asp-for="SenderAddress" class="form-control" placeholder="123 Main St, City, State" />
+                            <span asp-validation-for="SenderAddress" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-person-fill me-2"></i>Recipient</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="RecipientName" class="form-label"></label>
+                            <input asp-for="RecipientName" class="form-control" />
+                            <span asp-validation-for="RecipientName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="RecipientEmail" class="form-label"></label>
+                            <input asp-for="RecipientEmail" class="form-control" type="email" />
+                            <span asp-validation-for="RecipientEmail" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="RecipientAddress" class="form-label"></label>
+                            <input asp-for="RecipientAddress" class="form-control" placeholder="456 Oak Ave, City, State" />
+                            <span asp-validation-for="RecipientAddress" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-semibold mb-3"><i class="bi bi-box me-2"></i>Package Details</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label asp-for="Weight" class="form-label">Weight (kg)</label>
+                            <input asp-for="Weight" class="form-control" type="number" step="0.01" min="0.01" id="weightInput" />
+                            <span asp-validation-for="Weight" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ServiceType" class="form-label"></label>
+                            <select asp-for="ServiceType" class="form-select" id="serviceTypeSelect">
+                                <option value="Economy">Economy (7–10 days)</option>
+                                <option value="Standard" selected>Standard (3–5 days)</option>
+                                <option value="Express">Express (2–3 days)</option>
+                                <option value="Overnight">Overnight (Next day)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Estimated Cost</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="text" id="estimatedCost" class="form-control bg-light" readonly value="—" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-right-circle me-1"></i>Continue to Payment
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const rates = { Economy: 3.00, Standard: 5.00, Express: 12.50, Overnight: 25.00 };
+        function updateCost() {
+            const w = parseFloat(document.getElementById("weightInput").value) || 0;
+            const s = document.getElementById("serviceTypeSelect").value;
+            const cost = w > 0 ? (rates[s] * w + 2.50).toFixed(2) : "—";
+            document.getElementById("estimatedCost").value = cost;
+        }
+        document.getElementById("weightInput").addEventListener("input", updateCost);
+        document.getElementById("serviceTypeSelect").addEventListener("change", updateCost);
+    </script>
+}

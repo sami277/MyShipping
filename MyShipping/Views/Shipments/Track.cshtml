@@ -1,0 +1,79 @@
+@model MyShipping.Models.Shipment
+@{
+    ViewData["Title"] = "Track Shipment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <h2 class="fw-bold mb-4"><i class="bi bi-geo-alt me-2 text-primary"></i>Track a Shipment</h2>
+
+        <form method="get" asp-action="Track" class="mb-4">
+            <div class="input-group input-group-lg">
+                <input name="trackingNumber" value="@Context.Request.Query["trackingNumber"]"
+                       class="form-control" placeholder="Enter tracking number (e.g. MSH12345678)" />
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Track
+                </button>
+            </div>
+        </form>
+
+        @if (Context.Request.Query.ContainsKey("trackingNumber"))
+        {
+            @if (Model is null)
+            {
+                <div class="alert alert-warning">
+                    <i class="bi bi-question-circle me-2"></i>
+                    No shipment found for tracking number <strong>@Context.Request.Query["trackingNumber"]</strong>.
+                </div>
+            }
+            else
+            {
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-primary text-white fw-semibold">
+                        <i class="bi bi-box-seam me-2"></i>@Model.TrackingNumber
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p class="text-muted mb-1 small">FROM</p>
+                                <p class="fw-semibold">@Model.SenderName</p>
+                                <p class="text-muted small">@Model.SenderAddress</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p class="text-muted mb-1 small">TO</p>
+                                <p class="fw-semibold">@Model.RecipientName</p>
+                                <p class="text-muted small">@Model.RecipientAddress</p>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <p class="text-muted small mb-1">Service</p>
+                                <span class="badge bg-secondary">@Model.ServiceType</span>
+                            </div>
+                            <div class="col-4">
+                                <p class="text-muted small mb-1">Status</p>
+                                @{
+                                    var badge = Model.Status switch {
+                                        MyShipping.Models.ShipmentStatus.Delivered      => "bg-success",
+                                        MyShipping.Models.ShipmentStatus.InTransit      => "bg-primary",
+                                        MyShipping.Models.ShipmentStatus.OutForDelivery => "bg-info",
+                                        MyShipping.Models.ShipmentStatus.Cancelled      => "bg-danger",
+                                        MyShipping.Models.ShipmentStatus.Processing     => "bg-warning text-dark",
+                                        _                                                => "bg-secondary",
+                                    };
+                                }
+                                <span class="badge @badge">@Model.Status</span>
+                            </div>
+                            <div class="col-4">
+                                <p class="text-muted small mb-1">Est. Delivery</p>
+                                <strong>@(Model.EstimatedDelivery?.ToString("MMM d") ?? "—")</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

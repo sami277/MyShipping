@@ -1,0 +1,139 @@
+@model MyShipping.Models.Shipment
+@{
+    ViewData["Title"] = $"Shipment {Model.TrackingNumber}";
+}
+
+<div class="row mb-3">
+    <div class="col">
+        <h2 class="fw-bold">
+            <i class="bi bi-box-seam me-2"></i>
+            <span class="font-monospace">@Model.TrackingNumber</span>
+        </h2>
+    </div>
+    <div class="col-auto d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+    </div>
+</div>
+
+<!-- Status Timeline -->
+@{
+    var allStatuses = Enum.GetValues<MyShipping.Models.ShipmentStatus>().ToList();
+    var currentIdx  = allStatuses.IndexOf(Model.Status);
+}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <div class="d-flex justify-content-between position-relative">
+            <div class="position-absolute top-50 start-0 end-0 translate-middle-y" style="height:2px;background:#dee2e6;z-index:0;margin:0 2.5rem;"></div>
+            @foreach (var (st, idx) in allStatuses.Select((s, i) => (s, i)))
+            {
+                if (st == MyShipping.Models.ShipmentStatus.Cancelled) continue;
+                var done    = idx <= currentIdx && Model.Status != MyShipping.Models.ShipmentStatus.Cancelled;
+                var current = st == Model.Status;
+                <div class="text-center position-relative" style="z-index:1;min-width:70px">
+                    <div class="mx-auto rounded-circle d-flex align-items-center justify-content-center mb-1"
+                         style="width:36px;height:36px;background:@(done ? "#198754" : "#dee2e6");color:white;font-size:.9rem">
+                        <i class="bi @(done ? "bi-check-lg" : "bi-circle")"></i>
+                    </div>
+                    <small class="@(current ? "fw-bold text-success" : "text-muted") d-block" style="font-size:.7rem">@st</small>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Shipment Info -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-semibold">Shipment Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-5 text-muted">From</dt>       <dd class="col-7">@Model.SenderName<br/><small class="text-muted">@Model.SenderAddress</small></dd>
+                    <dt class="col-5 text-muted">To</dt>         <dd class="col-7">@Model.RecipientName<br/><small class="text-muted">@Model.RecipientAddress</small></dd>
+                    <dt class="col-5 text-muted">Email</dt>      <dd class="col-7">@Model.RecipientEmail</dd>
+                    <dt class="col-5 text-muted">Service</dt>    <dd class="col-7"><span class="badge bg-secondary">@Model.ServiceType</span></dd>
+                    <dt class="col-5 text-muted">Weight</dt>     <dd class="col-7">@Model.Weight kg</dd>
+                    <dt class="col-5 text-muted">Cost</dt>       <dd class="col-7">$@Model.ShippingCost.ToString("N2")</dd>
+                    <dt class="col-5 text-muted">Est. Delivery</dt>
+                    <dd class="col-7">@(Model.EstimatedDelivery?.ToString("MMM d, yyyy") ?? "—")</dd>
+                    <dt class="col-5 text-muted">Created</dt>    <dd class="col-7">@Model.CreatedAt.ToString("MMM d, yyyy HH:mm")</dd>
+                    <dt class="col-5 text-muted">Updated</dt>    <dd class="col-7">@Model.UpdatedAt.ToString("MMM d, yyyy HH:mm")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent fw-semibold">Payment</div>
+            <div class="card-body">
+                @if (Model.Payment is null)
+                {
+                    <div class="alert alert-warning mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Payment pending.
+                    </div>
+                    <a asp-controller="Payments" asp-action="Pay" asp-route-shipmentId="@Model.Id"
+                       class="btn btn-primary">Pay Now — $@Model.ShippingCost.ToString("N2")</a>
+                }
+                else
+                {
+                    <dl class="row mb-3">
+                        <dt class="col-5 text-muted">Status</dt>
+                        <dd class="col-7">
+                            @{
+                                var pBadge = Model.Payment.Status switch {
+                                    MyShipping.Models.PaymentStatus.Completed => "bg-success",
+                                    MyShipping.Models.PaymentStatus.Failed    => "bg-danger",
+                                    MyShipping.Models.PaymentStatus.Refunded  => "bg-secondary",
+                                    _                                          => "bg-warning text-dark",
+                                };
+                            }
+                            <span class="badge @pBadge">@Model.Payment.Status</span>
+                        </dd>
+                        <dt class="col-5 text-muted">Gateway</dt>  <dd class="col-7">@Model.Payment.Gateway</dd>
+                        <dt class="col-5 text-muted">Amount</dt>   <dd class="col-7">$@Model.Payment.Amount.ToString("N2")</dd>
+                        <dt class="col-5 text-muted">Tx ID</dt>    <dd class="col-7 font-monospace small">@(Model.Payment.TransactionId ?? "—")</dd>
+                        @if (Model.Payment.CardLastFour is not null)
+                        {
+                            <dt class="col-5 text-muted">Card</dt>     <dd class="col-7">**** @Model.Payment.CardLastFour</dd>
+                        }
+                        <dt class="col-5 text-muted">Processed</dt>
+                        <dd class="col-7">@(Model.Payment.ProcessedAt?.ToString("MMM d, yyyy HH:mm") ?? "—")</dd>
+                    </dl>
+                    @if (Model.Payment.Status == MyShipping.Models.PaymentStatus.Completed)
+                    {
+                        <form asp-controller="Payments" asp-action="Refund" method="post"
+                              onsubmit="return confirm('Are you sure you want to request a refund?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="paymentId" value="@Model.Payment.Id" />
+                            <button class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Request Refund
+                            </button>
+                        </form>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status update form (quick) -->
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-transparent fw-semibold">Update Status</div>
+    <div class="card-body">
+        <form asp-action="UpdateStatus" method="post" class="d-flex gap-2 align-items-center flex-wrap">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <select name="status" class="form-select w-auto">
+                @foreach (var s in Enum.GetValues<MyShipping.Models.ShipmentStatus>())
+                {
+                    <option value="@s" selected="@(s == Model.Status)">@s</option>
+                }
+            </select>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-arrow-repeat me-1"></i>Update
+            </button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,25 @@
+# Build artifacts
+**/bin/
+**/obj/
+*.user
+*.suo
+.vs/
+
+# SQLite database files created at runtime
+*.db
+*.db-shm
+*.db-wal
+
+# dotnet tool manifests local cache
+.config/
+
+# Rider / VS Code
+.idea/
+.vscode/
+*.DotSettings.user
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coveragexml

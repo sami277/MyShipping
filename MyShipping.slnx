@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MyShipping.Tests/MyShipping.Tests.csproj" />
+  <Project Path="MyShipping/MyShipping.csproj" />
+</Solution>
