@@ -1,4 +1,8 @@
+# Language Statistics Filter  
+node_modules/** linguist-vendored=true  
+**/node_modules/** linguist-vendored=true  
+UI/wwwroot/lib/** linguist-vendored=true  
+UI/wwwroot/Admin/assets/** linguist-vendored=true  
 *.css linguist-vendored=true  
-*.js linguist-vendored=true  
-UI/wwwroot/** linguist-vendored=true  
-**/node_modules/** linguist-vendored=true 
+*.scss linguist-vendored=true  
+*.js linguist-vendored=true 
