@@ -102,7 +102,7 @@ graph TD
 
 - [Portfolio Repository](https://github.com/sami-amara/Portfolio) – Overview of my skills, CV, and other projects.
 - [CV Repository](https://github.com/sami-amara/CV-SamiAmara) – Professional CV and career highlights.
-- [LinkedIn Profile](https://www.linkedin.com/in/sami-amara-032b70416/)
+- [LinkedIn Profile](https://www.linkedin.com/in/sami-amara-032b70416/) - Overview LinkdIn 
 
 
 ### Installation
